@@ -1,0 +1,12 @@
+mars:
+  api:
+    url: https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos
+    sol_key: sol
+    api_key: api_key
+    api_value: DEMO_KEY
+    camera_key: camera
+    camera_default_value: NAVCAM
+    img_key: img_src
+server:
+  error:
+    include-message: always
