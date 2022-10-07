@@ -23,20 +23,23 @@ public class SimpleLargestMarsPictureService implements LargestMarsPictureServic
 
     @Override
     @Cacheable("largestPicture")
-    public Optional<URI> getLargestPicture(int sol, String camera) {
+    public Optional<byte[]> getLargestPicture(int sol, String camera) {
         if (camera == null || camera.isBlank())
             camera = marsApiParams.getCameraDefaultValue();
 
-        final JsonNode rootNode = restTemplate.getForObject(UriComponentsBuilder.fromHttpUrl(marsApiParams.getUrl())
+        return requireNonNull(getAllPhotos(sol, camera))
+                .findValues(marsApiParams.getImgKey()).parallelStream()
+                .max(getContentLengthComparator())
+                .map(this::toUri)
+                .map(imgSrcURI -> restTemplate.getForObject(imgSrcURI, byte[].class));
+    }
+
+    private JsonNode getAllPhotos(int sol, String camera) {
+        return restTemplate.getForObject(UriComponentsBuilder.fromHttpUrl(marsApiParams.getUrl())
                 .queryParam(marsApiParams.getSolKey(), sol)
                 .queryParam(marsApiParams.getApiKey(), marsApiParams.getApiValue())
                 .queryParam(marsApiParams.getCameraKey(), camera)
                 .build().toUri(), JsonNode.class);
-
-        return requireNonNull(rootNode).findValues(marsApiParams.getImgKey()).stream()
-                .parallel()
-                .max(getContentLengthComparator())
-                .map(this::toUri);
     }
 
     private URI toUri(JsonNode jsonNode) {
